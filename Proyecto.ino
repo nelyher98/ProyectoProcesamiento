@@ -1,53 +1,76 @@
-#include <Adafruit_Sensor.h>
+#include <FirebaseESP32.h>
+#include <DHT.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
 
-#include "BluetoothSerial.h" 
-#include "DHT.h"
-#define DHTPIN 4    
-#define DHTTYPE DHT11
+
+#define FIREBASE_HOST "iotpractice-944a4-default-rtdb.firebaseio.com"
+#define FIREBASE_AUTH "jnqLpzcraWJffaoddF2ZS2e99pR4hCpfp0ohTRlJ"
+#define WIFI_SSID "INFINITUMEFA5_2.4"
+#define WIFI_PASSWORD "Z2VBWS74cR"
+
+#define DHTPIN 4   
+#define DHTTYPE DHT11 
 
 DHT dht(DHTPIN, DHTTYPE);
-float h,tc,tf,DPV;
 float calculoVPD(float, float);
-BluetoothSerial ESP_BT; 
-void setup()
-{
-  //delay(200);
-  
-  ESP_BT.begin("ESP32_Control");
-  pinMode(DHTPIN, INPUT);
+float h,tc,tf,DPV;
+FirebaseData fbdo;
+
+void setup() {
+
   Serial.begin(9600);
+  delay(1000);
+  WiFi.begin (WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Dang ket noi");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+
   dht.begin();
-  //delay(1000);
-  //Serial.println("DHT11 Temperature and Humidity ");
+  Serial.println ("");
+  Serial.println ("Da ket noi WiFi!");
+  Serial.println(WiFi.localIP());
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+
 }
 
-void loop()
-{
+void loop() {
+
   h = dht.readHumidity();
   tc = dht.readTemperature();
   tf = dht.readTemperature(true);
-  //DPV = calculoVPD(tc,h);
-  
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.print("%  Temperature: ");
+  DPV = calculoVPD(tc,h);
+
+  if (isnan(h) || isnan(tc)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+
+  }
+
+  Serial.print("Temperature: ");
   Serial.print(tc);
-  Serial.print("°C Farenheit: ");
+  Serial.print("°C  ");
+  Serial.print("Temperature: ");
   Serial.print(tf);
-  Serial.print("°F");
-  //Serial.print('\n');
-  //Serial.print("Humidity = ");
-  //Serial.print(h);
-  //Serial.print("%");
-  //Serial.print("|");
-  //Serial.print("Temperature = ");
-  //Serial.print(tc);
-  //Serial.print("°C");
-  //Serial.print(tf);
-  //Serial.println("°F");
-  //Serial.print("VPD = ");
-  //Serial.print(DPV);
-  delay(2000);
+  Serial.print("°F  ");
+  Serial.print("Humedity: ");
+  Serial.print(h);
+  Serial.println("%  ");
+  Serial.print("VPD: ");
+  Serial.print(DPV);
+
+  Firebase.setFloat( fbdo,"Temperature", tc);
+
+  Firebase.setFloat( fbdo,"Temperature2", tf);
+
+  Firebase.setFloat ( fbdo,"Humidity", h);
+
+  Firebase.setFloat ( fbdo,"VPD", DPV);
+
+  delay(200);
+
 }
 
 //VPD Calculation function
