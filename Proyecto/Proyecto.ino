@@ -1,8 +1,10 @@
 #include <FirebaseESP32.h>
+#include <ArduinoJson.h>
 #include <DHT.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
-
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #define FIREBASE_HOST "iotpractice-944a4-default-rtdb.firebaseio.com"
 #define FIREBASE_AUTH "jnqLpzcraWJffaoddF2ZS2e99pR4hCpfp0ohTRlJ"
@@ -22,7 +24,7 @@ void setup() {
   Serial.begin(9600);
   delay(1000);
   WiFi.begin (WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Dang ket noi");
+  Serial.print("Connecting!");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(500);
@@ -30,7 +32,7 @@ void setup() {
 
   dht.begin();
   Serial.println ("");
-  Serial.println ("Da ket noi WiFi!");
+  Serial.println ("Connected!");
   Serial.println(WiFi.localIP());
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
 
@@ -61,13 +63,13 @@ void loop() {
   Serial.print("VPD: ");
   Serial.print(DPV);
 
-  Firebase.setFloat( fbdo,"Temperature", tc);
+  Firebase.pushFloat( fbdo,"Temperature", tc);
 
-  Firebase.setFloat( fbdo,"Temperature2", tf);
+  Firebase.pushFloat( fbdo,"Temperature F", tf);
 
-  Firebase.setFloat ( fbdo,"Humidity", h);
+  Firebase.pushFloat ( fbdo,"Humidity", h);
 
-  Firebase.setFloat ( fbdo,"VPD", DPV);
+  Firebase.pushFloat ( fbdo,"VPD", DPV);
 
   delay(200);
 
